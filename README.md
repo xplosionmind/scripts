@@ -1,3 +1,9 @@
+---
+title: Tommi’s Scripts
+description: A collection of self-made scripts to carry out nicely some very specific tasks.
+permalink: /scripts/
+source: https://gitmi.dev/tommi/scripts
+---
 A collection of self-made scripts to carry out nicely some very specific tasks.
 
 * [`boom`][boom]: build and deploy <https://tommi.space> and <gemini://tommi.space>
