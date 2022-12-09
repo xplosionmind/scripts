@@ -1,5 +1,6 @@
 ---
 title: Tommi’s Scripts
+date: 2022-12-03T17:49:29+01:00
 description: A collection of self-made scripts to carry out nicely some very specific tasks.
 permalink: /scripts/
 source: https://gitmi.dev/tommi/scripts
