@@ -1,9 +1,10 @@
 ---
 title: 'Titan: taking Gemini in outer space'
 date: 2022-12-03T17:49:29+01:00
+updated: 2023-01-19T15:11:57+01:00
 permalink: /scripts/titan/
 description: |
-  This scripts generates a [gemtext](https://gemini.circumlunar.space/docs/gemtext.gmi 'A quick introduction to "gemtext" markup') version of tommi.space and publishes it via [gemserv](https://github.com/YunoHost-Apps/gemserv_ynh 'gemserv YunoHost package') on [[Xplosion Server]].
+  [This script](https://gitmi.dev/tommi/scripts/src/branch/main/titan/titan.sh) generates a [gemtext](https://gemini.circumlunar.space/docs/gemtext.gmi 'A quick introduction to "gemtext" markup') version of tommi.space and publishes it via [gemserv](https://github.com/YunoHost-Apps/gemserv_ynh 'gemserv YunoHost package') on [[Xplosion Server]].
 ---
 {{ description }}
 
