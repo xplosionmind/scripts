@@ -1,6 +1,7 @@
 #! /bin/bash
 
-# Deploy Gemini website
+# titan, a script by Tommi
+# https://tommi.space/scripts/titan 👀
 
 urlencode() {
 	# urlencode <string>
@@ -24,11 +25,14 @@ BASE_URL='gemini://tommi.space';
 SRC="$HOME/tommi.space/gemini";
 LOCAL_OUTPUT="$HOME/tommi.space/www/gemini";
 
-rm -rf "$LOCAL_OUTPUT"
+echo -e "\n\nRunning Titan:\ngenerating tommi.space Gemini capsule…\n";
+
+rm -rf "$LOCAL_OUTPUT" && \
 mkdir "$LOCAL_OUTPUT";
 cp -R "$SRC"/ "$LOCAL_OUTPUT";
 mv "$LOCAL_OUTPUT"/it/marmellata.gmi "$LOCAL_OUTPUT"/marmellata.gmi;
 mv "$LOCAL_OUTPUT"/it/zibaldone.gmi "$LOCAL_OUTPUT"/zibaldone.gmi;
+md2gemini -f -p -l copy -m -b "$BASE_URL" "$HOME"/tommi.space/scripts/titan/README.md >> "$LOCAL_OUTPUT"/titan.gmi;
 
 cd ~/tommi.space/content/posts;
 for f in `ls -r *.md`; do
@@ -69,9 +73,4 @@ while read f; do
 done < "$LOCAL_OUTPUT"/jam-list.txt;
 echo 'The Gemini Jam has been parsed.';
 
-rsync -avzP -e 'ssh -p 50002' --delete "$LOCAL_OUTPUT" admin@server.tommi.space:/home/admin/www.gemini.tmp/ && \
-ssh server \
-	'sudo rsync -azP --delete ~/www.gemini.tmp/ /opt/yunohost/gemserv/tommi.space/ && \
-	sudo yunohost service restart gemserv' && \
-#rm -rf "$LOCAL_OUTPUT" &&\
-echo -e "\033[1;32mSUCCESS\!\033[0m — gemini://tommi.space published";
+echo -e "\033[1;32mSUCCESS\033[0m: gemini://tommi.space generated\n\n";
