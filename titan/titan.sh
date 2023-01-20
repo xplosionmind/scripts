@@ -1,35 +1,77 @@
 #! /bin/bash
 
 # Deploy Gemini website
+
+urlencode() {
+	# urlencode <string>
+
+	old_lc_collate=$LC_COLLATE
+	LC_COLLATE=C
+
+	local length="${#1}"
+	for (( i = 0; i < length; i++ )); do
+		local c="${1:$i:1}"
+		case $c in
+			[a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
+			*) printf '%%%02X' "'$c" ;;
+		esac
+	done
+
+	LC_COLLATE=$old_lc_collate
+}
+
 BASE_URL='gemini://tommi.space';
+SRC="$HOME/tommi.space/gemini";
+LOCAL_OUTPUT="$HOME/tommi.space/www/gemini";
 
-rm -rf /tmp/tommi.space;
-mkdir /tmp/tommi.space;
-mkdir /tmp/tommi.space/gemini;
-cp /home/admin/tommi.space/gemini/* /tmp/tommi.space/gemini/ -vf;
+rm -rf "$LOCAL_OUTPUT"
+mkdir "$LOCAL_OUTPUT";
+cp -R "$SRC"/ "$LOCAL_OUTPUT";
+mv "$LOCAL_OUTPUT"/it/marmellata.gmi "$LOCAL_OUTPUT"/marmellata.gmi;
+mv "$LOCAL_OUTPUT"/it/zibaldone.gmi "$LOCAL_OUTPUT"/zibaldone.gmi;
 
-cd /home/admin/tommi.space/content/posts;
-for f in `ls *.md -r`; do
+cd ~/tommi.space/content/posts;
+for f in `ls -r *.md`; do
 	title=`basename -s .md "$f"`;
 	encoded_title=`urlencode "$title"`;
 
-	md2gemini "$f" -w -f -p -l copy -m -b "$BASE_URL";
-	echo -e "=> $BASE_URL/$encoded_title.gmi $title" >> /tmp/tommi.space/gemini/zibaldone.gmi;
+	md2gemini "$f" -w -d "$LOCAL_OUTPUT" -f -p -l copy -m -b "$BASE_URL";
+	if grep -q 'lang: en' "$f"; then
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇬🇧" >> "$LOCAL_OUTPUT"/blog.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇬🇧" >> "$LOCAL_OUTPUT"/zibaldone.gmi;
+	elif grep -q 'lang: fr' "$f"; then
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇫🇷" >> "$LOCAL_OUTPUT"/blog.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇫🇷" >> "$LOCAL_OUTPUT"/zibaldone.gmi;
+	else
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/blog.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/zibaldone.gmi;
+	fi
 done
-sudo mv /home/admin/tommi.space/content/posts/*.gmi /opt/yunohost/gemserv/tommi.space/ -vf;
-echo 'Zibaldone has been parsed.';
+echo 'The Gemini Zibaldone has been parsed.';
 
-cd /home/admin/tommi.space/content/notes/public;
-ls -1Ut *.md > /tmp/tommi.space/jam_list.txt;
+cd ~/tommi.space/content/notes/public;
+ls -1Ut *.md > "$LOCAL_OUTPUT"/jam-list.txt;
 while read f; do
 	title=`basename -s .md "$f"`;
 	encoded_title=`urlencode "$title"`;
 
-	md2gemini "$f" -w -f -p -l copy -m -b 'https://tommi.space/';
-	echo -e "=> $BASE_URL/$encoded_title.gmi $title" >> /tmp/tommi.space/gemini/jam.gmi;
-done < /tmp/tommi.space/jam_list.txt;
-sudo mv /home/admin/tommi.space/content/notes/public/*.gmi /opt/yunohost/gemserv/tommi.space/ -vf;
-echo 'The Jam has been parsed.';
+	md2gemini "$f" -w -d "$LOCAL_OUTPUT" -f -p -l copy -m -b "$BASE_URL";
+	if grep -q 'lang: it' "$f"; then
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/jam.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/marmellata.gmi;
+	elif grep -q 'lang: fr' "$f"; then
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇫🇷" >> "$LOCAL_OUTPUT"/jam.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇫🇷" >> "$LOCAL_OUTPUT"/marmellata.gmi;
+	else
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇬🇧" >> "$LOCAL_OUTPUT"/jam.gmi;
+		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇬🇧" >> "$LOCAL_OUTPUT"/marmellata.gmi;
+	fi
+done < "$LOCAL_OUTPUT"/jam-list.txt;
+echo 'The Gemini Jam has been parsed.';
 
-sudo cp /tmp/tommi.space/gemini/* /opt/yunohost/gemserv/tommi.space/ -vf;
-sudo yunohost service restart gemserv;
+rsync -avzP -e 'ssh -p 50002' --delete "$LOCAL_OUTPUT" admin@server.tommi.space:/home/admin/www.gemini.tmp/ && \
+ssh server \
+	'sudo rsync -azP --delete ~/www.gemini.tmp/ /opt/yunohost/gemserv/tommi.space/ && \
+	sudo yunohost service restart gemserv' && \
+#rm -rf "$LOCAL_OUTPUT" &&\
+echo -e "\033[1;32mSUCCESS\!\033[0m — gemini://tommi.space published";
