@@ -1,22 +1,36 @@
 #! /bin/bash
 
+#########################################
+#                                       #
+#   BACKUP SCRIPT FOR XPLOSION SERVER   #
+#   https://tommi.space/scripts/backup  #
+#       licensed with EUPL v. 1.2       #
+#                                       #
+#########################################
+
+# NOTE: $BACKUP_PORT is a hidden global environment variable
+
 NAME="`date -u +%Y-%m-%d`_auto-backup";
 DESCRIPTION="AUTOMATED BACKUP, created on `date -u +%Y-%m-%dT%H:%M:%SZ`";
-REMOTE_DIR="/home/tommi/backup/server.tommi.space/latest";
-ERROR_MSG="\n\n\t\t\e[1m\e[31mSOMETHING WENT WRONG\e[0m, aborting and exiting…\n\n";
-ABORT="echo -e $ERROR_MSG";
-LOG_FILE="/tmp/$NAME.log";
+LOCAL_DIR="/home/yunohost.backup/archives/";
+REMOTE_DIR="/home/tommi/backup/server.tommi.space/auto/";
+FAIL=false;
+hr="――――――――――――――――――――――――――――――――――――――――――"
+dhr="==========================================";
 
-echo -e "\n\n\t**** \e[1mCREATING BACKUP NAMED \e[32m$NAME\e[0m ****\n\t\t$DESCRIPTION\n\n" >> $LOG_FILE;
-sudo yunohost backup create -n "$NAME" -d "$DESCRIPTION" >> $LOG_FILE;
+# Creating the backup
+echo -e "$dhr\n`date -u +%Y-%m-%dT%H:%M:%SZ`:\tCREATING BACKUP\n$hr";
+sudo systemctl stop gitea.service || FAIL=true;
+sudo yunohost backup create -n "$NAME" -d "$DESCRIPTION" || FAIL=true;
+sudo systemctl start gitea.service || FAIL=true;
 
-ssh tommi@backup.tommi.space -p 60213 'mv -vf /home/tommi/backup/server.tommi.space/latest/* /home/tommi/backup/server.tommi.space/old' >> $LOG_FILE;
-echo -e "\n\n\t**** \e[1mMOVING $NAME\e[0m to backup.tommi.space ****\n\n" >> $LOG_FILE;
-scp -P 60213 /home/yunohost.backup/archives/$NAME.* tommi@backup.tommi.space:"$REMOTE_DIR" >> $LOG_FILE ||\
-	ssh tommi@backup.tommi.space -p 60213 'mv -vf /home/tommi/backup/server.tommi.space/old/* /home/tommi/backup/server.tommi.space/latest';
-rm -rfv /home/yunohost.backup/archives/$NAME.* >> $LOG_FILE;
-ssh tommi@backup.tommi.space -p 60213 'rm -rvf /home/tommi/backup/server.tommi.space/old/*' >> $LOG_FILE;
+# Syncing the backup
+echo -e "\n\n`date -u +%Y-%m-%dT%H:%M:%SZ`:$hr\nBACKUP CREATED!\n$hr\nnow starting rsync transfer…\n$hr";
+rsync -az -e "ssh -p $BACKUP_PORT" --delete "$LOCAL_DIR" tommi@backup.tommi.space:"$REMOTE_DIR" && \
+cd "$LOCAL_DIR" && rm -rf ./* || FAIL=true; # deleting the backup locally
 
-echo -e "\n\n\t**** \e[1mTHE END\e[0m ****\n\n" >> $LOG_FILE;
-
-mailx -s "$NAME LOG" tommiboom+server@protonmail.com < $LOG_FILE;
+if [ "$FAIL" = false ] ; then
+	echo -e "$hr\n`date -u +%Y-%m-%dT%H:%M:%SZ`:\tSUCCESS! — THE END\n$dhr";
+else
+	echo -e "$hr\n`date -u +%Y-%m-%dT%H:%M:%SZ`:\tFAILURE!\n$dhr";
+fi

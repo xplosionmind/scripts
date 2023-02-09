@@ -24,8 +24,10 @@ urlencode() {
 BASE_URL='gemini://tommi.space';
 SRC="$HOME/tommi.space/gemini";
 LOCAL_OUTPUT="$HOME/tommi.space/www/gemini";
+hr="――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――";
+dhr="============================================================";
 
-echo -e "\n\nRunning Titan:\ngenerating tommi.space Gemini capsule…\n";
+echo -e "$dhr\n\033[1mRUNNING TITAN\033[0m: generating tommi.space Gemini capsule…";
 
 rm -rf "$LOCAL_OUTPUT" && \
 mkdir "$LOCAL_OUTPUT";
@@ -34,6 +36,8 @@ mv "$LOCAL_OUTPUT"/it/marmellata.gmi "$LOCAL_OUTPUT"/marmellata.gmi;
 mv "$LOCAL_OUTPUT"/it/zibaldone.gmi "$LOCAL_OUTPUT"/zibaldone.gmi;
 md2gemini -f -p -l copy -m -b "$BASE_URL" "$HOME"/tommi.space/scripts/titan/README.md >> "$LOCAL_OUTPUT"/titan.gmi;
 
+echo "\n\n" >> "$LOCAL_OUTPUT"/blog.gmi;
+echo "\n\n" >> "$LOCAL_OUTPUT"/zibaldone.gmi;
 cd ~/tommi.space/content/posts;
 for f in `ls -r *.md`; do
 	title=`basename -s .md "$f"`;
@@ -50,9 +54,11 @@ for f in `ls -r *.md`; do
 		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/blog.gmi;
 		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇮🇹" >> "$LOCAL_OUTPUT"/zibaldone.gmi;
 	fi
-done
-echo 'The Gemini Zibaldone has been parsed.';
+done;
+echo -e "\tThe Gemini Zibaldone has been parsed.";
 
+echo "\n\n" >> "$LOCAL_OUTPUT"/jam.gmi;
+echo "\n\n" >> "$LOCAL_OUTPUT"/marmellata.gmi;
 cd ~/tommi.space/content/notes/public;
 ls -1Ut *.md > "$LOCAL_OUTPUT"/jam-list.txt;
 while read f; do
@@ -71,6 +77,6 @@ while read f; do
 		echo -e "=> $BASE_URL/$encoded_title.gmi $title 🇬🇧" >> "$LOCAL_OUTPUT"/marmellata.gmi;
 	fi
 done < "$LOCAL_OUTPUT"/jam-list.txt;
-echo 'The Gemini Jam has been parsed.';
+echo -e "\tThe Gemini Jam has been parsed.";
 
-echo -e "\033[1;32mSUCCESS\033[0m: gemini://tommi.space generated\n\n";
+echo -e "\033[1;32mSUCCESS\033[0m: gemini://tommi.space generated\n$dhr";
