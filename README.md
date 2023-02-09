@@ -4,6 +4,7 @@ date: 2022-12-03T17:49:29+01:00
 updated: 2023-01-20T12:19:18+01:00
 description: A collection of self-made scripts to carry out nicely some very specific tasks.
 permalink: /scripts/
+layout: jam.html
 source: https://gitmi.dev/tommi/scripts
 ---
 A collection of self-made scripts to carry out nicely some very specific tasks.
